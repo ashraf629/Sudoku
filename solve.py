@@ -24,8 +24,18 @@ def possibilities(puzzle,i,j):
         possible.remove(n)
     return possible
 
+def checkValid(puzzle):
+    if len(puzzle) != 9: return False
+    for x in puzzle:
+        if len(x) != 9: return False
+    for x in puzzle:
+        for y in x:
+            if y not in list(range(10)): return False
+    return True
+
 def try_solve(puzzle):
     # returns solved puzzle if possible, returns False otherwise
+    if not checkValid(puzzle): return False
     stack = [puzzle]
     while stack:
         current = stack.pop()
@@ -65,3 +75,4 @@ if __name__ == '__main__':
             s = file.readline()
         for x in range(TESTCASES):
             assert solutions[x] == try_solve(quizzes[x])
+        print('all test cases passed')

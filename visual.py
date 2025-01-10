@@ -15,7 +15,6 @@ def is_int(s):
         return False
 
 def printPuzzle(stdscr, puzzle):
-    stdscr.clear()
     curses.start_color()
     curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
     curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK)
@@ -61,21 +60,32 @@ def createTimeline(puzzle):
     timeline.append(board(timeline[-1].entries,green=timeline[-1].green+timeline[-1].yellow))
     return timeline
 
-def main(stdscr):
-    entries = '000000657702400100350006000500020009210300500047109008008760090900502030030018206'
-    assert len(entries) == 81
-    puzzle = [[0 for _ in range(9)] for _ in range(9)]
-    for x in range(81): puzzle[x//9][x%9] = int(entries[x])
-    sleepTime = 0.1
+def getUserInput(stdscr):
+    userInput = ''
+    char = stdscr.getch()
+    print(curses.KEY_ENTER)
+    while char not in [curses.KEY_ENTER,10]:
+        print(char)
+        userInput += chr(char)
+        stdscr.addstr(chr(char))
+        stdscr.refresh()
+        char = stdscr.getch()
+    return userInput
 
+def main(stdscr):
+    puzzle = '000000657702400100350006000500020009210300500047109008008760090900502030030018206'
+    puzzle = [[int(puzzle[9*i+j]) for j in range(9)] for i in range(9)]
+    sleepTime = 0.5
+    
+    stdscr.nodelay(True)
     timeline = createTimeline(puzzle)
     for puzzle in timeline:
-        stdscr.nodelay(True)
         stdscr.addstr("Press s to skip to the end")
         stdscr.refresh()
         userInput = stdscr.getch()
         if userInput == ord('s'): break
         time.sleep(sleepTime)
+        stdscr.clear()
         printPuzzle(stdscr,puzzle)
     
     stdscr.keypad(True)
@@ -83,11 +93,11 @@ def main(stdscr):
     frame = len(timeline)
     while True:
         stdscr.clear()
-        printPuzzle(stdscr,timeline[frame-1])
         stdscr.addstr(f"Number of frames = {len(timeline)}\n")
         stdscr.addstr("Use left and right arrow keys to navigate through frames\n")
         stdscr.addstr("Press c to choose a specific frame\n")
         stdscr.addstr("Press any other key to exit\n")
+        printPuzzle(stdscr,timeline[frame-1])
         stdscr.refresh()
         userInput = stdscr.getch()
 
@@ -98,11 +108,13 @@ def main(stdscr):
         elif userInput == ord('c'):
             stdscr.clear()
             stdscr.addstr(f"Enter a number from 1 to {len(timeline)} to view frame\n")
-            userInput = stdscr.getstr().decode()
+            stdscr.refresh()
+            userInput = getUserInput(stdscr)
             while not (is_int(userInput) and 0 < int(userInput) < len(timeline) + 1):
                 stdscr.clear()
                 stdscr.addstr(f"Please enter a number from 1 to {len(timeline)}\n")
-                userInput = stdscr.getstr().decode()
+                stdscr.refresh()
+                userInput = getUserInput(stdscr)
             frame = int(userInput)
         else:
             break

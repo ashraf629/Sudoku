@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify
+from random import randint
 import visual
 
 app = Flask(__name__)
@@ -10,6 +11,11 @@ def toDict(board):
 
 @app.route('/')
 def index():
+    global PUZZLE
+    lines = open("sudoku.csv").readlines()
+    numOfPuzzles = len(lines)-1
+    n = randint(1,1+numOfPuzzles)
+    PUZZLE = lines[n].split(',')[0]
     return render_template('index.html')
 
 @app.route('/get_puzzle', methods=['GET'])

@@ -7,10 +7,22 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <div class="board-container">
+    <div class="header-container">
         <h1>Sudoku Visualizer</h1>
-        <table id="sudoku-board"></table>
-        <input type="range" id="frame-slider" class="slider" min="0" max="100" value="0" step="1">
+        <p>Visualize the backtracking algorithm for solving a Sudoku puzzle</p>
+    </div>
+    <div class="main-container">
+        <div class="board-container">
+            <table id="sudoku-board"></table>
+        </div>
+        <div class="controls-container">
+            <input type="range" id="frame-slider" class="slider" min="0" max="100" value="0" step="1">
+            <textarea id="puzzle-input" rows="10" cols="30" placeholder="Enter your puzzle here..."></textarea>
+            <div class = "buttons-container">
+                <button id="enter-button">Enter</button>
+                <button id="randomise-button" onclick="randomiseBoard()">Randomise</button>
+            </div>
+        </div>
     </div>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>

@@ -11,7 +11,9 @@ function createBoard(board) {
             var row = document.createElement('tr');
             var _loop_2 = function (j) {
                 var cell = document.createElement('td');
-                cell.textContent = board.entries[i][j] === 0 ? '' : board.entries[i][j].toString();
+                var cellContent = document.createElement('div');
+                cellContent.classList.add('cell-content');
+                cellContent.textContent = board.entries[i][j] === 0 ? '' : board.entries[i][j].toString();
                 if (board.green.some(function (_a) {
                     var x = _a[0], y = _a[1];
                     return x === i && y === j;
@@ -33,6 +35,7 @@ function createBoard(board) {
                 else {
                     cell.classList.add('cell-default');
                 }
+                cell.appendChild(cellContent);
                 row.appendChild(cell);
             };
             for (var j = 0; j < 9; j++) {
@@ -44,29 +47,47 @@ function createBoard(board) {
             _loop_1(i);
         }
     }
-    else {
-        console.error('Table element not found');
+}
+/**
+ * Adjusts the size of the Sudoku board to ensure it remains square,
+ * based on the smaller dimension of the parent container.
+ */
+function adjustTableSize() {
+    var boardContainer = document.querySelector('.board-container');
+    var table = document.getElementById('sudoku-board');
+    if (boardContainer && table) {
+        var containerWidth = boardContainer.clientWidth;
+        var containerHeight = boardContainer.clientHeight;
+        var tableSize = Math.min(containerWidth, containerHeight) * 0.9;
+        table.style.width = "".concat(tableSize, "px");
+        table.style.height = "".concat(tableSize, "px");
     }
 }
 /**
- * Updates the frame based on the slider value.
- * @param value - The value of the slider.
+ * Fetches the puzzle and solution from the server and creates the Sudoku board.
  */
-function updateframe(value) {
-    createBoard(boardFrames[value]);
+function solve() {
+    fetch('/get_puzzle', { method: 'GET' })
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
+        createBoard(data);
+    });
+    /* fetch timeline */
+    var boardFrames = [];
+    fetch('/solve', { method: 'GET' })
+        .then(function (response) { return response.json(); })
+        .then(function (timeline) {
+        boardFrames = timeline;
+        var slider = document.getElementById('frame-slider');
+        slider.max = (timeline.length - 1).toString();
+        slider.oninput = function () { return createBoard(timeline[parseInt(slider.value)]); };
+    });
 }
-fetch('/get_puzzle', { method: 'GET' })
-    .then(function (response) { return response.json(); })
-    .then(function (data) {
-    createBoard(data);
-});
-/* fetch timeline */
-var boardFrames = [];
-fetch('/solve', { method: 'GET' })
-    .then(function (response) { return response.json(); })
-    .then(function (timeline) {
-    boardFrames = timeline;
-    var slider = document.getElementById('frame-slider');
-    slider.max = (timeline.length - 1).toString();
-    slider.oninput = function () { return updateframe(parseInt(slider.value)); };
-});
+function randomiseBoard() {
+    fetch('/randomise', { method: 'GET' })
+        .then(function () { solve(); });
+}
+// Call adjustTableSize on window resize and initial load
+window.addEventListener('resize', adjustTableSize);
+window.addEventListener('load', adjustTableSize);
+solve();

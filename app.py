@@ -9,13 +9,18 @@ PUZZLE = '0090654300070008006001080200030900025014039608040001000305090070560800
 def toDict(board):
     return {'entries':board.entries, 'green':board.green, 'yellow':board.yellow, 'red':board.red}
 
-@app.route('/')
-def index():
+@app.route("/randomise", methods=['GET'])
+def randomisePuzzle():
     global PUZZLE
     lines = open("sudoku.csv").readlines()
     numOfPuzzles = len(lines)-1
     n = randint(1,1+numOfPuzzles)
     PUZZLE = lines[n].split(',')[0]
+    return jsonify({'status':'success'})
+
+@app.route('/')
+def index():
+    randomisePuzzle()
     return render_template('index.html')
 
 @app.route('/get_puzzle', methods=['GET'])

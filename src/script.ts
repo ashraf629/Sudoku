@@ -20,7 +20,9 @@ function createBoard(board: Board): void {
             const row = document.createElement('tr');
             for (let j = 0; j < 9; j++) {
                 const cell = document.createElement('td');
-                cell.textContent = board.entries[i][j] === 0 ? '' : board.entries[i][j].toString();
+                const cellContent = document.createElement('div');
+                cellContent.classList.add('cell-content');
+                cellContent.textContent = board.entries[i][j] === 0 ? '' : board.entries[i][j].toString();
                 
                 if (board.green.some(([x, y]) => x === i && y === j)) {
                     cell.classList.add('cell-green');
@@ -32,36 +34,60 @@ function createBoard(board: Board): void {
                     cell.classList.add('cell-default');
                 }
                 
+                cell.appendChild(cellContent);
                 row.appendChild(cell);
             }
             table.appendChild(row);
         }
-    } else {
-        console.error('Table element not found');
     }
 }
 
 /**
- * Updates the frame based on the slider value.
- * @param value - The value of the slider.
+ * Adjusts the size of the Sudoku board to ensure it remains square,
+ * based on the smaller dimension of the parent container.
  */
-function updateframe(value: number): void {
-    createBoard(boardFrames[value]);
+function adjustTableSize(): void {
+    const boardContainer = document.querySelector('.board-container') as HTMLElement | null;
+    const table = document.getElementById('sudoku-board') as HTMLElement;
+
+    if (boardContainer && table) {
+        const containerWidth = boardContainer.clientWidth;
+        const containerHeight = boardContainer.clientHeight;
+        const tableSize = Math.min(containerWidth, containerHeight) * 0.9;
+        table.style.width = `${tableSize}px`;
+        table.style.height = `${tableSize}px`;
+    }
 }
 
-fetch('/get_puzzle', { method: 'GET' })
+/**
+ * Fetches the puzzle and solution from the server and creates the Sudoku board.
+ */
+function solve() {
+    fetch('/get_puzzle', { method: 'GET' })
     .then(response => response.json())
     .then((data: Board) => {
         createBoard(data);
     });
 
-/* fetch timeline */
-let boardFrames: Board[] = [];
-fetch('/solve', { method: 'GET' })
-    .then(response => response.json())
-    .then((timeline: Board[]) => {
-        boardFrames = timeline;
-        const slider = document.getElementById('frame-slider') as HTMLInputElement;
-        slider.max = (timeline.length - 1).toString();
-        slider.oninput = () => updateframe(parseInt(slider.value));
-    });
+    /* fetch timeline */
+    let boardFrames: Board[] = [];
+    fetch('/solve', { method: 'GET' })
+        .then(response => response.json())
+        .then((timeline: Board[]) => {
+            boardFrames = timeline;
+            const slider = document.getElementById('frame-slider') as HTMLInputElement;
+            slider.max = (timeline.length - 1).toString();
+            slider.oninput = () => createBoard(timeline[parseInt(slider.value)]);
+        });
+}
+
+function randomiseBoard() {
+    fetch('/randomise', { method: 'GET' })
+    .then(() => {solve();});
+}
+
+// Call adjustTableSize on window resize and initial load
+window.addEventListener('resize', adjustTableSize);
+window.addEventListener('load', adjustTableSize);
+
+solve();
